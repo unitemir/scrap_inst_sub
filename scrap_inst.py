@@ -1,6 +1,7 @@
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
@@ -13,6 +14,18 @@ import json
 import sys
 
 import config
+count = 0
+
+def check_difference_in_count(driver):
+    global count
+
+    new_count = len(driver.find_elements_by_xpath("//div[@role='isgrP']//li"))
+
+    if count != new_count:
+        count = new_count
+        return True
+    else:
+        return False
 
 class Inst:
     def __init__(self, url_inst, login, password):
@@ -41,10 +54,38 @@ class Inst:
 
     def scrap_followers(self, url):
         self.driver.get(url)
-        elemnt = self.driver.find_element_by_xpath('//html/body/div[1]/section/main/div/header/section/ul/li[3]')
-        elemnt.click()
-        soup = bs(self.driver.page_source, 'html.parser')
-        print(soup)
+        followers = self.driver.find_element_by_xpath('//html/body/div[1]/section/main/div/header/section/ul/li[3]')
+        followers.click()
+        self.driver.implicitly_wait(60)
+        print(datetime.today().strftime(f'%H:%M:%S | Начал поиск друзей.'))
+        friends = set()
+        try:
+            self.driver.find_element_by_class_name('PZuss')
+            pop_up_window = WebDriverWait(
+                self.driver, 2).until(EC.element_to_be_clickable((By.XPATH, "//div[@class='isgrP']")))
+            i = 1
+            fr = list()
+            while True:
+                self.driver.execute_script(
+                    'arguments[0].scrollTop = arguments[0].scrollTop + arguments[0].offsetHeight;',
+                    pop_up_window)
+                soup = bs(self.driver.page_source, 'html.parser')
+                fr.append(len(soup.find_all('li', {"class": "wo9IH"})))
+                if i % 10 == 0:
+                    if len(set(fr)) == 1:
+                        break
+                    fr = []
+                i += 1
+                time.sleep(random.randrange(1, 3))
+
+            #
+            # for element in soup.find_all(class_="FPmhX"):
+            #     link = element.get('href')
+            #     friends.add(link)
+        except:
+            print('nenashel')
+            pass
+        time.sleep(400)
         # head = []
         # for elem in soup.select('-nal3'):
         #     for el in elem.find_all('span'):
